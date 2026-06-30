@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>查询分析 - 观影史</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .result-item {
+            background-color: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease-in-out;
+        }
+        .result-item:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .result-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1f2937;
+        }
+        .result-meta {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+        .result-type {
+            font-weight: 500;
+            color: #3b82f6;
+        }
+        .result-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .tag {
+            background-color: #f3f4f6;
+            color: #4b5563;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+        }
+        .result-comment {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>观影史</h1>
+        <p>记录你的观影历程，分享你的观影体验</p>
+    </header>
+    
+    <nav>
+        <a href="/">首页</a>
+        {% if not logged_in %}
+        <a href="/login">登录</a>
+        <a href="/register">注册</a>
+        {% endif %}
+        <a href="/records">我的记录</a>
+        <a href="/add_record">添加记录</a>
+        <a href="/shared">分享记录</a>
+        <a href="/search">查询分析</a>
+        {% if logged_in %}
+        <a href="/profile">个人主页</a>
+        {% endif %}
+    </nav>
+    
+    <div class="container">
+        <div class="user-info">
+            <div>
+                <h2>查询分析</h2>
+                <p>欢迎回来，{{ user_name }}</p>
+            </div>
+        </div>
+        
+        <div class="search-section">
+            <h3>搜索记录</h3>
+            <form id="searchForm">
+                <div class="search-form">
+                    <input type="text" id="searchQuery" class="search-input" placeholder="搜索电影标题、评论...">
+                    <select id="searchType" class="search-select">
+                        <option value="">全部类型</option>
+                        <option value="电影">电影</option>
+                        <option value="电视剧">电视剧</option>
+                        <option value="综艺">综艺</option>
+                        <option value="动漫">动漫</option>
+                        <option value="小说">小说</option>
+                        <option value="其他">其他</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">搜索</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="results-section">
+            <h3>搜索结果</h3>
+            <div id="searchResults">
+                <!-- 搜索结果将通过JavaScript动态加载 -->
+            </div>
+        </div>
+        
+        <div class="stats-section">
+            <h3>统计分析</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalRecords">0</div>
+                    <div class="stat-label">总观影次数</div>
+                </div>
+                <!-- 其他统计卡片将通过JavaScript动态加载 -->
+            </div>
+            
+            <div class="chart-container">
+                <h4>观影类型分布</h4>
+                <div id="typeChart">
+                    <!-- 图表将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2026 观影史 - 记录你的观影历程，分享你的观影体验</p>
+    </footer>
+    
+    <script>
+        // 页面加载时获取统计数据
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchStats();
+        });
+        
+        // 搜索表单提交
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const query = document.getElementById('searchQuery').value;
+            const type = document.getElementById('searchType').value;
+            searchRecords(query, type);
+        });
+        
+        // 搜索记录
+        function searchRecords(query, type) {
+            fetch(`/api/search?query=${encodeURIComponent(query)}&type=${encodeURIComponent(type)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultsContainer = document.getElementById('searchResults');
+                    if (data.length > 0) {
+                        resultsContainer.innerHTML = data.map(record => {
+                            // 处理标签
+                            let tagsHtml = '';
+                            if (record.tags) {
+                                const tags = record.tags.split('、');
+                                tagsHtml = `<div class="result-tags">
+                                    ${tags.map(tag => `<span class="tag">${tag.trim()}</span>`).join('')}
+                                </div>`;
+                            }
+                            
+                            return `
+                                <div class="result-item">
+                                    <div class="result-header">${record.title}</div>
+                                    <div class="result-meta">
+                                        <span class="result-type">${record.type}</span>
+                                        ${record.watch_time ? ' | ' + record.watch_time : ''}
+                                        ${record.rating ? ' | ' + '★'.repeat(record.rating) : ' | 无评分'}
+                                    </div>
+                                    ${tagsHtml}
+                                    ${record.comment ? `<div class="result-comment">${record.comment}</div>` : ''}
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        resultsContainer.innerHTML = '<div class="result-item"><p style="text-align: center; color: #718096;">没有找到匹配的记录</p></div>';
+                    }
+                });
+        }
+        
+        // 获取统计数据
+        function fetchStats() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    // 更新总记录数
+                    document.getElementById('totalRecords').textContent = data.total_records;
+                    
+                    // 更新类型统计
+                    const statsGrid = document.querySelector('.stats-grid');
+                    data.type_stats.forEach(stat => {
+                        const statCard = document.createElement('div');
+                        statCard.className = 'stat-card';
+                        statCard.innerHTML = `
+                            <div class="stat-value">${stat.count}</div>
+                            <div class="stat-label">${stat.type}</div>
+                        `;
+                        statsGrid.appendChild(statCard);
+                    });
+                    
+                    // 生成类型分布图表
+                    generateTypeChart(data.type_stats);
+                });
+        }
+        
+        // 生成类型分布图表
+        function generateTypeChart(typeStats) {
+            const chartContainer = document.getElementById('typeChart');
+            if (typeStats.length > 0) {
+                // 计算最大值用于归一化
+                const maxCount = Math.max(...typeStats.map(stat => stat.count));
+                
+                let chartHTML = '';
+                typeStats.forEach(stat => {
+                    const percentage = maxCount > 0 ? (stat.count / maxCount) * 100 : 0;
+                    chartHTML += `
+                        <div class="chart-item">
+                            <div class="chart-label">${stat.type}</div>
+                            <div class="chart-bar">
+                                <div class="chart-fill" style="width: ${percentage}%;">${stat.count}次</div>
+                            </div>
+                            <div class="chart-value">${stat.count}</div>
+                        </div>
+                    `;
+                });
+                chartContainer.innerHTML = chartHTML;
+            } else {
+                chartContainer.innerHTML = '<p style="text-align: center; color: #718096;">暂无统计数据</p>';
+            }
+        }
+    </script>
+</body>
+</html>
