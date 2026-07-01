@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加记录 - 观影史</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>观影史</h1>
+        <p>记录你的观影历程，分享你的观影体验</p>
+    </header>
+    
+    <nav>
+        <a href="/">首页</a>
+        {% if not logged_in %}
+        <a href="/login">登录</a>
+        <a href="/register">注册</a>
+        {% endif %}
+        <a href="/records">我的记录</a>
+        <a href="/add_record">添加记录</a>
+        <a href="/shared">分享记录</a>
+        <a href="/search">查询分析</a>
+        {% if logged_in %}
+        <a href="/profile">个人主页</a>
+        {% endif %}
+    </nav>
+    
+    <div class="container">
+        <div class="user-info">
+            <div>
+                <h2>添加新记录</h2>
+                <p>欢迎回来，{{ user_name }}</p>
+            </div>
+        </div>
+        
+        <div class="add-record">
+            <h3>添加新记录</h3>
+            <form id="addRecordForm" method="POST" action="/add_record">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="title">标题</label>
+                        <input type="text" id="title" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="type">类型</label>
+                        <select id="type" name="type" required>
+                            <option value="电影">电影</option>
+                            <option value="电视剧">电视剧</option>
+                            <option value="综艺">综艺</option>
+                            <option value="动漫">动漫</option>
+                            <option value="小说">小说</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="watch_time">观看时间</label>
+                        <input type="datetime-local" id="watch_time" name="watch_time">
+                    </div>
+                    <div class="form-group">
+                        <label for="location">地点</label>
+                        <input type="text" id="location" name="location">
+                    </div>
+                    <div class="form-group">
+                        <label for="people">同行人员</label>
+                        <input type="text" id="people" name="people">
+                    </div>
+                    <div class="form-group">
+                        <label for="rating">评分</label>
+                        <select id="rating" name="rating">
+                            <option value="">无</option>
+                            <option value="1">1星</option>
+                            <option value="2">2星</option>
+                            <option value="3">3星</option>
+                            <option value="4">4星</option>
+                            <option value="5">5星</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="event">事件</label>
+                    <textarea id="event" name="event"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="comment">评论</label>
+                    <textarea id="comment" name="comment"></textarea>
+                </div>
+                <div class="form-group">
+                        <label for="tags">标签（用顿号分隔）</label>
+                        <input type="text" id="tags" name="tags" placeholder="例如：好看、感人、推荐">
+                    </div>
+                <button type="submit" class="btn btn-primary">添加记录</button>
+            </form>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2026 观影史 - 记录你的观影历程，分享你的观影体验</p>
+    </footer>
+</body>
+</html>

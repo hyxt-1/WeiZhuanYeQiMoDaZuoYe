@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ record.title }} - 记录详情 - 观影史</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .detail-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .detail-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .detail-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .detail-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .meta-label {
+            font-weight: 500;
+            color: #6b7280;
+        }
+        .detail-content {
+            margin-bottom: 30px;
+        }
+        .detail-section {
+            margin-bottom: 25px;
+        }
+        .detail-section h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #1f2937;
+        }
+        .detail-section p {
+            line-height: 1.6;
+            color: #4b5563;
+        }
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .tag {
+            background-color: #f3f4f6;
+            color: #4b5563;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 14px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>观影史</h1>
+        <p>记录你的观影历程，分享你的观影体验</p>
+    </header>
+    
+    <nav>
+        <a href="/">首页</a>
+        {% if not logged_in %}
+        <a href="/login">登录</a>
+        <a href="/register">注册</a>
+        {% endif %}
+        <a href="/records">我的记录</a>
+        <a href="/add_record">添加记录</a>
+        <a href="/shared">分享记录</a>
+        <a href="/search">查询分析</a>
+        {% if logged_in %}
+        <a href="/profile">个人主页</a>
+        {% endif %}
+    </nav>
+    
+    <div class="container">
+        <div class="user-info">
+            <div>
+                <h2>记录详情</h2>
+                <p>欢迎回来，{{ user_name }}</p>
+            </div>
+        </div>
+        
+        <div class="detail-container">
+            <div class="detail-header">
+                <div class="detail-title">
+                    {{ record.title }}
+                    {% if record.is_shared %} 
+                    <span class="share-badge">已分享</span>
+                    {% endif %}
+                    {% if record.rating %}
+                    <span class="rating">{{ '★' * record.rating }}</span>
+                    {% endif %}
+                </div>
+                <div class="detail-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">类型：</span>
+                        <span>{{ record.type }}</span>
+                    </div>
+                    {% if record.watch_time %}
+                    <div class="meta-item">
+                        <span class="meta-label">观看时间：</span>
+                        <span>{{ record.watch_time.strftime('%Y-%m-%d %H:%M') }}</span>
+                    </div>
+                    {% endif %}
+                    {% if record.location %}
+                    <div class="meta-item">
+                        <span class="meta-label">地点：</span>
+                        <span>{{ record.location }}</span>
+                    </div>
+                    {% endif %}
+                    {% if record.people %}
+                    <div class="meta-item">
+                        <span class="meta-label">同行人员：</span>
+                        <span>{{ record.people }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if record.tags %}
+                <div class="tags">
+                    {% for tag in record.tags.split('、') %}
+                    <span class="tag">{{ tag.strip() }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if record.event %}
+            <div class="detail-section">
+                <h3>事件</h3>
+                <p>{{ record.event }}</p>
+            </div>
+            {% endif %}
+            
+            {% if record.comment %}
+            <div class="detail-section">
+                <h3>评论</h3>
+                <p>{{ record.comment }}</p>
+            </div>
+            {% endif %}
+            
+            <div class="action-buttons">
+                <a href="/edit_record/{{ record.id }}" class="btn btn-primary">编辑</a>
+                <button class="btn {% if record.is_shared %}btn-secondary{% else %}btn-primary{% endif %}" onclick="toggleShare()">
+                    {% if record.is_shared %}取消分享{% else %}分享{% endif %}
+                </button>
+                <a href="/delete_record/{{ record.id }}" class="btn btn-danger" onclick="return confirm('确定要删除这条记录吗？')">删除</a>
+                <a href="/records" class="btn btn-secondary">返回记录列表</a>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2026 观影史 - 记录你的观影历程，分享你的观影体验</p>
+    </footer>
+    
+    <script>
+        function toggleShare() {
+            const recordId = {{ record.id }};
+            const isShared = {{ 'true' if record.is_shared else 'false' }};
+            
+            const url = isShared ? `/api/unshare/${recordId}` : `/api/share/${recordId}`;
+            
+            fetch(url, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('分享操作失败:', error);
+            });
+        }
+    </script>
+</body>
+</html>

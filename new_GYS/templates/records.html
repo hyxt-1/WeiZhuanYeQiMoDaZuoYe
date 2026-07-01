@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的记录 - 观影史</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .records-list {
+            margin-top: 30px;
+        }
+        .records-list h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+        .record-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .record-card {
+            background-color: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .record-card:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px);
+            border-color: #d1d5db;
+        }
+        .record-card-header {
+            margin-bottom: 16px;
+        }
+        .record-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            color: #1f2937;
+            line-height: 1.4;
+        }
+        .type-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 20px;
+            text-decoration: none;
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+        }
+        .tab:hover {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        .tab.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .record-card:hover .record-card-title {
+            color: #3b82f6;
+        }
+        .record-card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .tag {
+            background-color: #f3f4f6;
+            color: #4b5563;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .record-card-meta {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+        .meta-item {
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .meta-label {
+            font-weight: 500;
+            color: #9ca3af;
+        }
+        .record-card-comment {
+            font-size: 14px;
+            color: #4b5563;
+            line-height: 1.4;
+        }
+        .comment-label {
+            font-weight: 500;
+            color: #6b7280;
+        }
+        .no-records {
+            text-align: center;
+            padding: 40px 20px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>观影史</h1>
+        <p>记录你的观影历程，分享你的观影体验</p>
+    </header>
+    
+    <nav>
+        <a href="/">首页</a>
+        {% if not logged_in %}
+        <a href="/login">登录</a>
+        <a href="/register">注册</a>
+        {% endif %}
+        <a href="/records">我的记录</a>
+        <a href="/add_record">添加记录</a>
+        <a href="/shared">分享记录</a>
+        <a href="/search">查询分析</a>
+        {% if logged_in %}
+        <a href="/profile">个人主页</a>
+        {% endif %}
+    </nav> 
+    <div class="container">
+        <div class="user-info">
+            <div>
+                <h2>我的记录</h2>
+                <p>欢迎回来，{{ user_name }}</p>
+            </div>
+        </div>
+        
+        <div class="records-list">
+            <h3>我的记录 ({{ records|length }}部)</h3>
+            
+            <!-- 类型选项卡 -->
+            <div class="type-tabs">
+                <a href="/records" class="tab {% if not selected_type %}active{% endif %}">全部</a>
+                <a href="/records?type=电影" class="tab {% if selected_type == '电影' %}active{% endif %}">电影</a>
+                <a href="/records?type=电视剧" class="tab {% if selected_type == '电视剧' %}active{% endif %}">电视剧</a>
+                <a href="/records?type=综艺" class="tab {% if selected_type == '综艺' %}active{% endif %}">综艺</a>
+                <a href="/records?type=动漫" class="tab {% if selected_type == '动漫' %}active{% endif %}">动漫</a>
+                <a href="/records?type=小说" class="tab {% if selected_type == '小说' %}active{% endif %}">小说</a>
+                <a href="/records?type=其他" class="tab {% if selected_type == '其他' %}active{% endif %}">其他</a>
+            </div>
+            
+            {% if records %}
+                <div class="record-grid">
+                    {% for record in records %}
+                    <div class="record-card" onclick="window.location.href='/record_detail/{{ record.id }}'">
+                        <div class="record-card-header">
+                        <h4 class="record-card-title">{{ record.title }}</h4>
+                    </div>
+                        <div class="record-card-tags">
+                            {% if record.tags %}
+                                {% for tag in record.tags.split('、')[:3] %}
+                                <span class="tag">{{ tag.strip() }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="tag">{{ record.type }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="record-card-meta">
+                            {% if record.watch_time %}
+                            <div class="meta-item">
+                                <span class="meta-label">时间：</span>
+                                <span>{{ record.watch_time.strftime('%Y-%m-%d') }}</span>
+                            </div>
+                            {% endif %}
+                            {% if record.location %}
+                            <div class="meta-item">
+                                <span class="meta-label">地点：</span>
+                                <span>{{ record.location }}</span>
+                            </div>
+                            {% endif %}
+                            {% if record.people %}
+                            <div class="meta-item">
+                                <span class="meta-label">人物：</span>
+                                <span>{{ record.people }}</span>
+                            </div>
+                            {% endif %}
+                            {% if record.rating %}
+                            <div class="meta-item">
+                                <span class="meta-label">评分：</span>
+                                <span>{{ '★' * record.rating }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% if record.comment %}
+                        <div class="record-card-comment">
+                            <span class="comment-label">评论：</span>
+                            <span>{{ record.comment[:30] }}{% if record.comment|length > 30 %}...{% endif %}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-records">
+                    <p style="text-align: center; color: #718096; font-size: 16px;">暂无记录，开始添加你的第一条观影记录吧！</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2026 观影史 - 记录你的观影历程，分享你的观影体验</p>
+    </footer>
+    
+    <script>
+        function toggleShare(button) {
+            const recordId = button.dataset.recordId;
+            const isShared = button.dataset.isShared === 'true';
+            
+            const url = isShared ? `/api/unshare/${recordId}` : `/api/share/${recordId}`;
+            
+            fetch(url, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
